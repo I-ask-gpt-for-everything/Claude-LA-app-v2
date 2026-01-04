@@ -1,14 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  FolderKanban,
+  Mail,
+  CheckSquare,
   Users,
+  StickyNote,
   FileText,
   Settings,
   X,
   Leaf,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '../ui';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,14 +19,25 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/projects', icon: FolderKanban, label: 'Projects' },
+  { to: '/emails', icon: Mail, label: 'Emails' },
+  { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
   { to: '/clients', icon: Users, label: 'Clients' },
+  { to: '/notes', icon: StickyNote, label: 'Notes' },
   { to: '/documents', icon: FileText, label: 'Documents' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch {
+      // Error is handled by AuthContext
+    }
+  };
+
   return (
     <>
       {/* Overlay for mobile */}
@@ -86,11 +100,40 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             ))}
           </nav>
 
-          {/* Footer */}
+          {/* User section */}
           <div className="p-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
-              Outdoor Design Work Manager
-            </p>
+            {user && (
+              <div className="flex items-center gap-3 mb-3">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt={user.displayName}
+                    className="h-8 w-8 rounded-full"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-medium">
+                    {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user.displayName}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="w-full justify-start text-gray-600 hover:text-gray-900"
+              leftIcon={<LogOut className="h-4 w-4" />}
+            >
+              Sign out
+            </Button>
           </div>
         </div>
       </aside>

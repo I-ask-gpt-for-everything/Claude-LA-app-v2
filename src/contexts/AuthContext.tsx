@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
-import { getUserById, createUser } from '../services/firestore';
+import { getUserById, createUser, updateUser } from '../services/firestore';
 import type { User } from '../types';
 
 interface AuthContextType {
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const clearError = useCallback(() => setError(null), []);
 
   // Sync user data from Firestore
-  const syncUserData = useCallback(async (fbUser: FirebaseUser) => {
+  const syncUserData = useCallback(async (fbUser: FirebaseUser, isNewLogin = false) => {
     try {
       let userData = await getUserById(fbUser.uid);
 
@@ -55,6 +55,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           theme: 'system',
         });
         userData = await getUserById(fbUser.uid);
+      } else if (isNewLogin) {
+        // Update lastLoginAt for existing users on new login
+        await updateUser(fbUser.uid, {
+          photoURL: fbUser.photoURL,
+          displayName: fbUser.displayName || userData.displayName,
+        });
       }
 
       setUser(userData);
@@ -93,7 +99,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setError(null);
       setIsLoading(true);
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      // Sync user data with isNewLogin=true to update lastLoginAt
+      await syncUserData(result.user, true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sign in with Google';
       setError(message);
@@ -101,7 +109,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [syncUserData]);
 
   const signInWithEmail = useCallback(async (email: string, password: string) => {
     try {

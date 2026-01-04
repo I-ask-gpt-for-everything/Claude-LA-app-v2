@@ -1,3 +1,4 @@
 export { Header } from './Header';
 export { Sidebar } from './Sidebar';
 export { Shell } from './Shell';
+export { ProtectedRoute } from './ProtectedRoute';

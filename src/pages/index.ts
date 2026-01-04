@@ -3,3 +3,7 @@ export { Projects } from './Projects';
 export { Clients } from './Clients';
 export { Documents } from './Documents';
 export { Settings } from './Settings';
+export { LoginPage } from './LoginPage';
+export { EmailsPage } from './EmailsPage';
+export { TasksPage } from './TasksPage';
+export { NotesPage } from './NotesPage';
